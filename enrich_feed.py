@@ -118,8 +118,7 @@ def enrich_feed(input_url, output_file, excel_path):
                 desc_lines.append(f"Categoría: {categoria_excel}")
             if usage_info:
                 desc_lines.append(f"Uso Específico: {usage_info}")
-            if sku_excel:
-                desc_lines.append(f"SKU: {sku_excel}")
+            # SKU removed as per user request
             if barcode_excel:
                 desc_lines.append(f"Barcode: {barcode_excel}")
             
