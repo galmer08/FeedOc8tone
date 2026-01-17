@@ -3,6 +3,7 @@ import requests
 import io
 import pandas as pd
 import os
+import re
 
 def load_excel_data(excel_path):
     """Loads product data from Excel and returns a dictionary indexed by Id."""
@@ -25,6 +26,27 @@ def clean_text(text):
     if not isinstance(text, str):
         return str(text) if text is not None else ""
     return text.strip().replace('\n', ' ').replace('\r', '')
+
+def extract_usage_info(description):
+    """Extracts usage info like 'Piel Grasa' or 'Cabello Seco' from description."""
+    if not description:
+        return None
+    
+    # regex patterns
+    # Piel: Piel (normal|grasa|seca|mixta|sensible|madura|con acné)
+    skin_pattern = r"(?i)(?:para|piel)\s+(normal|grasa|seca|mixta|sensible|madura|con acn[ée])"
+    # Cabello: Cabello (graso|seco|dañado|teñido|rizado|lacio|fino)
+    hair_pattern = r"(?i)(?:para|cabello)\s+(graso|seco|dañado|teñido|rizado|lacio|fino)"
+    
+    skin_match = re.search(skin_pattern, description)
+    if skin_match:
+        return f"Piel {skin_match.group(1).title()}"
+        
+    hair_match = re.search(hair_pattern, description)
+    if hair_match:
+        return f"Cabello {hair_match.group(1).title()}"
+        
+    return None
 
 def enrich_feed(input_url, output_file, excel_path):
     print(f"Downloading feed from {input_url}...")
@@ -54,13 +76,19 @@ def enrich_feed(input_url, output_file, excel_path):
         if excel_item:
             enriched_count += 1
             # --- Generate Rich Title for AI Bot ---
-            # Format: [Nombre Excel] | [Marca Excel] | [Categoría Excel]
+            # Format: [Nombre Excel] | [Usage Info] | [Marca Excel] | [Categoría Excel]
             nombre_excel = clean_text(excel_item.get('Nombre', ''))
             marca_excel = clean_text(excel_item.get('Marca', ''))
             categoria_excel = clean_text(excel_item.get('Categoria', '')) # Full path
+            desc_excel = clean_text(excel_item.get('Descripcion', '')) # Rich description
             
             title_parts = [nombre_excel]
             
+            # --- EXTRACT USAGE INFO ---
+            usage_info = extract_usage_info(desc_excel)
+            if usage_info and usage_info.lower() not in nombre_excel.lower():
+                 title_parts.append(usage_info)
+
             # Add Brand if not present (case insensitive check)
             if marca_excel and marca_excel.lower() not in nombre_excel.lower():
                 title_parts.append(marca_excel)
@@ -81,7 +109,6 @@ def enrich_feed(input_url, output_file, excel_path):
             
             sku_excel = clean_text(excel_item.get('SKU', ''))
             barcode_excel = clean_text(excel_item.get('Barcode', ''))
-            desc_excel = clean_text(excel_item.get('Descripcion', '')) # Rich description
             
             desc_lines = []
             desc_lines.append(f"Producto: {nombre_excel}")
@@ -89,6 +116,8 @@ def enrich_feed(input_url, output_file, excel_path):
                 desc_lines.append(f"Marca: {marca_excel}")
             if categoria_excel:
                 desc_lines.append(f"Categoría: {categoria_excel}")
+            if usage_info:
+                desc_lines.append(f"Uso Específico: {usage_info}")
             if sku_excel:
                 desc_lines.append(f"SKU: {sku_excel}")
             if barcode_excel:
