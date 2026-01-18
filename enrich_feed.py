@@ -101,13 +101,17 @@ def enrich_feed(input_url, output_file, excel_path):
             product_type_elem = item.find('g:product_type', ns)
             if product_type_elem is not None and product_type_elem.text:
                 # Replace > and &gt; with | and clean up spaces
-                full_category = product_type_elem.text.replace('&gt;', '|').replace('>', '|').replace('  ', ' ').strip()
+                raw_cat = product_type_elem.text.replace('&gt;', '|').replace('>', '|')
+                # Normalize spaces around | to " |" (space + pipe + no space)
+                full_category = re.sub(r'\s*\|\s*', ' |', raw_cat).strip()
                 title_parts.append(full_category)
             elif categoria_excel:
                 # Fallback to Excel category if XML product_type is missing
                 title_parts.append(categoria_excel)
                 
-            new_title = " | ".join(title_parts)
+            raw_title = " |".join(title_parts)
+            # Ensure ALL pipes follow the " |" format (stripping any existing spaces around pipes)
+            new_title = re.sub(r'\s*\|\s*', ' |', raw_title).strip()
             
             # Update Title in XML
             title_elem = item.find('g:title', ns)
