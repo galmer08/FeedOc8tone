@@ -100,8 +100,8 @@ def enrich_feed(input_url, output_file, excel_path):
             # Get Product Type from XML (Full Path)
             product_type_elem = item.find('g:product_type', ns)
             if product_type_elem is not None and product_type_elem.text:
-                # Replace > with | and clean up spaces
-                full_category = product_type_elem.text.replace('>', '|').replace('  ', ' ').strip()
+                # Replace > and &gt; with | and clean up spaces
+                full_category = product_type_elem.text.replace('&gt;', '|').replace('>', '|').replace('  ', ' ').strip()
                 title_parts.append(full_category)
             elif categoria_excel:
                 # Fallback to Excel category if XML product_type is missing
