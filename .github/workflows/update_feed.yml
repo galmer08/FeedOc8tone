@@ -2,8 +2,8 @@ name: Update Feed
 
 on:
   schedule:
-    # Run at 4:00 AM Argentina Time (7:00 UTC)
-    - cron: '0 7 * * *'
+    # Run at 10:00 PM Argentina Time (1:00 UTC)
+    - cron: '0 1 * * *'
   workflow_dispatch: # Allows manual trigger
 
 jobs:
