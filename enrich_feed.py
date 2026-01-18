@@ -25,7 +25,11 @@ def clean_text(text):
     """Cleans text for XML output."""
     if not isinstance(text, str):
         return str(text) if text is not None else ""
-    return text.strip().replace('\n', ' ').replace('\r', '')
+    # Remove HTML tags: looks for < followed by any characters until >
+    clean = re.sub(r'<[^>]+>', ' ', text)
+    # Normalize whitespace: replace multiple spaces/newlines with single space
+    clean = re.sub(r'\s+', ' ', clean).strip()
+    return clean
 
 def extract_usage_info(description):
     """Extracts usage info like 'Piel Grasa' or 'Cabello Seco' from description."""
